@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            display: block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #dataDisplay {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Data Demo</h1>
+    
+    <div class="container">
+        <h2>Add Data to Firebase</h2>
+        <form id="dataForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+            
+            <label for="message">Message:</label>
+            <textarea id="message" rows="4" required></textarea>
+            
+            <button type="submit">Submit Data</button>
+        </form>
+    </div>
+    
+    <div class="container">
+        <h2>Retrieved Data</h2>
+        <button id="loadData">Load Data</button>
+        <div id="dataDisplay"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-analytics.js";
+        import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-database.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAF6jj1XZ1RqQ0nqYQJgis7xik-mpl3kPo",
+            authDomain: "testleadspark.firebaseapp.com",
+            databaseURL: "https://testleadspark-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "testleadspark",
+            storageBucket: "testleadspark.firebasestorage.app",
+            messagingSenderId: "1083134499936",
+            appId: "1:1083134499936:web:eba93c636a2ab677453705",
+            measurementId: "G-43SFZMMWSW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+        
+        // Handle form submission
+        document.getElementById('dataForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
+            
+            // Create a new entry in the database
+            const messagesRef = ref(database, 'messages');
+            const newMessageRef = push(messagesRef);
+            
+            set(newMessageRef, {
+                name: name,
+                message: message,
+                timestamp: Date.now()
+            }).then(() => {
+                alert('Data saved successfully!');
+                document.getElementById('dataForm').reset();
+            }).catch(error => {
+                console.error('Error saving data:', error);
+                alert('Error saving data: ' + error.message);
+            });
+        });
+        
+        // Handle loading data
+        document.getElementById('loadData').addEventListener('click', function() {
+            const messagesRef = ref(database, 'messages');
+            
+            onValue(messagesRef, (snapshot) => {
+                const data = snapshot.val();
+                const displayDiv = document.getElementById('dataDisplay');
+                displayDiv.innerHTML = '';
+                
+                if (data) {
+                    for (const key in data) {
+                        const entry = data[key];
+                        const date = new Date(entry.timestamp);
+                        
+                        displayDiv.innerHTML += `
+                            <div style="margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 5px;">
+                                <p><strong>${entry.name}</strong> - ${date.toLocaleString()}</p>
+                                <p>${entry.message}</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    displayDiv.innerHTML = '<p>No data available</p>';
+                }
+            }, {
+                onlyOnce: true
+            });
+        });
+    </script>
+</body>
+</html> 
